@@ -126,6 +126,8 @@ _parse_expression:
         mov     al, [si]
         cmp     al, '('
         je      _parse_list
+        cmp     al, '?'
+        je      _parse_cond
 	cmp	al, '+'
 	je	_parse_add
 	cmp	al, '-'
@@ -289,6 +291,39 @@ _parse_assign:
         mov     ax, bx
         stosw
         mov     [_jit_current], di
+        pop     di
+        ret
+_parse_cond:
+        inc     si
+        dec     cx
+        ;;      COND
+        call    _parse_expression
+        push    di
+        mov     di, [_jit_current]
+        mov     al, 0x58        ;; POP AX
+        stosb
+        mov al, 0x85        ; TEST AX, AX (opcode 0x85 with modrm 0xC0)
+        mov ah, 0xC0
+        stosw
+        mov     al, 0x74        ;; JZ rel i8
+        stosb
+        mov     dx, di          ;; Save address after placeholder
+        xor     ax, ax
+        stosb                   ;; Placeholder for jump offset
+        mov     [_jit_current], di
+        pop     di
+        
+        ;;      THEN branch
+        push    dx              ;; Push address of placeholder
+        call    _parse_expression
+        
+        ;; Patch the JZ offset
+        pop     ax              ;; Get placeholder address
+        push    di
+        mov     di, ax
+        mov     ax, word [_jit_current]
+        sub     ax, di
+        stosb                   ;; Patch the offset
         pop     di
         ret
 _parse_add:
