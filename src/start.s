@@ -225,7 +225,7 @@ _parse_here:
         mov     al, 0xB8
         stosb
         mov     ax, di
-        add     ax, 3
+        add     ax, -1
         stosw
 	mov	al, 0x50
 	stosb
