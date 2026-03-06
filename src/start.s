@@ -214,8 +214,6 @@ _parse_goto:
         mov     al, 0xFF        ; EXT opcode
         mov     ah, 0xE3        ; ModRM for JMP BX
         stosw
-	mov	al, 0x50
-	stosb
         mov     [_jit_current], di
         pop     di
         ret
@@ -227,7 +225,7 @@ _parse_here:
         mov     al, 0xB8
         stosb
         mov     ax, di
-        add     ax, -1
+        add     ax, 3
         stosw
 	mov	al, 0x50
 	stosb
